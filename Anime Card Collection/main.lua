@@ -56,6 +56,7 @@ Window:EditOpenButton({
 
 --// Tab
 local MainTab = Window:Tab({ Title = "Main", Icon = "home" })
+local ShopTab = Window:Tab({ Title = "Shop", Icon = "chart" })
 local MiscTab = Window:Tab({Title = "Misc", Icon = "settings"})
 
 --// =========================
@@ -169,10 +170,12 @@ MainTab:Toggle({
 })
 
 MainTab:Space()
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE PLACE
+--------------------------------------------------
+local SelectedPlace = {}
 
-local SelectedPacks = {}
-
-local PackList = {
+local PlaceList = {
     "Pirate",
     "Ninja",
     "Soul",
@@ -196,6 +199,88 @@ local PackList = {
 MainTab:Dropdown({
     Title = "Select Packs",
     Multi = true,
+    Values = PlaceList,
+    Callback = function(v)
+        SelectedPlace = v
+    end
+})
+
+local AutoPlace = false
+local CardRemote = game:GetService("ReplicatedStorage").Remotes.Card
+
+MainTab:Toggle({
+    Title = "Auto Equip & Place Card",
+    Desc = "Awas Ngeframe NGENTOT",
+    Value = false,
+    Callback = function(v)
+        AutoPlace = v
+        if not v then return end
+        
+        task.spawn(function()
+            while AutoPlace do
+                for _, cardName in ipairs(SelectedPlace) do
+                    if not AutoPlace then break end
+                    
+                    -- Equip dulu
+                    pcall(function()
+                        CardRemote:FireServer("Equip", cardName)
+                    end)
+                    
+                    task.wait(0.15)
+                    
+                    -- Place ke Floor
+                    pcall(function()
+                        CardRemote:FireServer("Place", cardName)
+                    end)
+                    
+                    task.wait(0.25)
+                end
+                task.wait(0.6)
+            end
+        end)
+    end
+})
+
+MainTab:Space()
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE BUY PACK
+--------------------------------------------------
+local SelectedPacks = {}
+
+local PackList = {
+    "Pirate",
+    "Ninja",
+    "Soul",
+    "Slayer",
+    "Sorcerer",
+    "Dragon",
+    "Fire",
+    "Hero",
+    "Hunter",
+    "Solo",
+    "Titan",
+    "Chainsaw",
+    "Flight",
+    "Ego",
+    "Clover",
+    "Ghoul",
+    "Geass",
+    "Bizarre"
+}
+
+ShopTab:Dropdown({
+    Title = "Select Packs",
+    Multi = true,
     Values = PackList,
     Callback = function(v)
         SelectedPacks = v
@@ -205,7 +290,7 @@ MainTab:Dropdown({
 local AutoBuyPack = false
 local CardRemote = game:GetService("ReplicatedStorage").Remotes.Card
 
-MainTab:Toggle({
+ShopTab:Toggle({
     Title = "Auto Buy Pack",
     Desc = "Auto buy pack by name (skip pack id)",
     Value = false,
@@ -234,41 +319,97 @@ MainTab:Toggle({
     end
 })
 
-local AutoPlace = false
-local CardRemote = game:GetService("ReplicatedStorage").Remotes.Card
+ShopTab:Space()
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE BUY MARKET
+--------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StockRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Stock")
 
-MainTab:Toggle({
-    Title = "Auto Equip & Place Card",
-    Desc = "Awas Ngeframe NGENTOT",
+local AutoBuyMarket = false
+local SelectedMarketItems = {}
+
+local BaseCards = {
+    "Pirate",
+    "Ninja",
+    "Soul",
+    "Slayer",
+    "Sorcerer",
+    "Dragon",
+    "Fire",
+    "Hero",
+    "Hunter",
+    "Solo",
+    "Titan",
+    "Chainsaw",
+    "Flight",
+    "Ego",
+    "Clover",
+    "Ghoul",
+    "Geass",
+    "Bizarre"
+}
+
+local Rarities = {
+    "Gold",
+    "Emerald",
+    "Void",
+    "Diamond",
+    "Rainbow"
+}
+
+local MarketList = {}
+
+for _, card in ipairs(BaseCards) do
+    table.insert(MarketList, card) -- polos
+    for _, r in ipairs(Rarities) do
+        table.insert(MarketList, card .. "-" .. r)
+    end
+end
+
+ShopTab:Dropdown({
+    Title = "Market Buy List",
+    Desc = "Select cards to auto buy",
+    Values = MarketList,
+    Multi = true,
+    AllowNone = true,
+    SearchBarEnabled = true,
+    Callback = function(v)
+        SelectedMarketItems = v
+    end
+})
+
+ShopTab:Toggle({
+    Title = "Auto Buy Market",
+    Desc = "Auto buy selected market items",
     Value = false,
     Callback = function(v)
-        AutoPlace = v
+        AutoBuyMarket = v
         if not v then return end
 
         task.spawn(function()
-            while AutoPlace do
-                for _, cardName in ipairs(SelectedPacks) do
-                    if not AutoPlace then break end
+            while AutoBuyMarket do
+                for _, buyId in ipairs(SelectedMarketItems) do
+                    if not AutoBuyMarket then break end
 
-                    -- Equip dulu
                     pcall(function()
-                        CardRemote:FireServer("Equip", cardName)
+                        StockRemote:FireServer("Buy", buyId)
                     end)
 
-                    task.wait(0.15)
-
-                    -- Place ke Floor
-                    pcall(function()
-                        CardRemote:FireServer("Place", cardName)
-                    end)
-
-                    task.wait(0.25)
+                    task.wait(0.05) -- cepat tapi aman
                 end
-                task.wait(0.6)
+
+                task.wait(0.15)
             end
         end)
     end
 })
+
+
+
+
+
+
 
 --------------------------------------------------
 --// TOGGLE ANTI AFK

@@ -297,6 +297,52 @@ MainTab:Toggle({
     end
 })
 
+MainTab:Space()
+--------------------------------------------------
+--// AUTO COLLECT GRADE TOKEN
+--------------------------------------------------
+--// Services
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function getChar()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+local AutoCollectToken = false
+
+MainTab:Toggle({
+    Title = "Auto Collect Grade Token",
+    Default = false,
+    Callback = function(state)
+        AutoCollectToken = state
+
+        if state then
+            task.spawn(function()
+                while AutoCollectToken do
+                    task.wait(0.2)
+
+                    local Char = getChar()
+                    local HRP = Char:FindFirstChild("HumanoidRootPart")
+                    if not HRP then continue end
+
+                    for _, token in ipairs(workspace.Items.Tokens.Client:GetChildren()) do
+                        if not AutoCollectToken then break end
+                        if not token:IsA("BasePart") then continue end
+
+                        local oldCF = HRP.CFrame
+                        HRP.CFrame = token.CFrame
+                        task.wait(0.05)
+                        HRP.CFrame = oldCF
+                    end
+                end
+            end)
+        end
+    end
+})
+
+
+
 
 --------------------------------------------------
 --// DROPDOWN AND TOGGLE UPGRADE

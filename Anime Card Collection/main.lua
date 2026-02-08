@@ -56,6 +56,7 @@ Window:EditOpenButton({
 
 --// Tab
 local MainTab = Window:Tab({ Title = "Main", Icon = "home" })
+local GradeTab = Window:Tab({ Title = "Grade", Icon = "home" })
 local ShopTab = Window:Tab({ Title = "Shop", Icon = "chart" })
 local MiscTab = Window:Tab({Title = "Misc", Icon = "settings"})
 
@@ -242,10 +243,265 @@ MainTab:Toggle({
 })
 
 MainTab:Space()
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE CRAFT
+--------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local PotionRemote = ReplicatedStorage
+    :WaitForChild("Remotes")
+    :WaitForChild("Potion")
+
+local AutoCraftPotion = false
+local SelectedCrafts = {}
+
+MainTab:Dropdown({
+    Title = "Potion Craft List",
+    Desc = "Select potions to auto craft",
+    Values = {
+        "Luck1", "Luck2", "Luck3",
+        "HatchTime1", "HatchTime2", "HatchTime3",
+        "Mutation1", "Mutation2", "Mutation3",
+        "XP1", "XP2", "XP3"
+    },
+    Multi = true,
+    AllowNone = true,
+    SearchBarEnabled = true,
+    Callback = function(v)
+        SelectedCrafts = v
+    end
+})
+
+MainTab:Toggle({
+    Title = "Auto Craft Potion",
+    Desc = "Auto craft selected potions",
+    Value = false,
+    Callback = function(v)
+        AutoCraftPotion = v
+        if not v then return end
+
+        task.spawn(function()
+            while AutoCraftPotion do
+                for _, craftId in ipairs(SelectedCrafts) do
+                    if not AutoCraftPotion then break end
+
+                    pcall(function()
+                        PotionRemote:FireServer("Craft", craftId)
+                    end)
+
+                    task.wait(0.01) -- cepat tapi aman
+                end
+
+                task.wait(0.01)
+            end
+        end)
+    end
+})
 
 
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE UPGRADE
+--------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CardRemote = ReplicatedStorage
+    :WaitForChild("Remotes")
+    :WaitForChild("Card")
+
+local AutoUpgrade = false
+local SelectedUpgradeCards = {}
+local FromRarity = "Regular"
+
+local RarityOrder = {
+    "Regular",
+    "Gold",
+    "Emerald",
+    "Void",
+    "Diamond",
+    "Rainbow"
+}
+
+local function GetNextRarity(from)
+    for i, r in ipairs(RarityOrder) do
+        if r == from then
+            return RarityOrder[i + 1]
+        end
+    end
+end
 
 
+GradeTab:Dropdown({
+    Title = "Upgrade Cards",
+    Desc = "Select cards to upgrade",
+    Values = {
+        "Pirate",
+        "Ninja",
+        "Soul",
+        "Slayer",
+        "Sorcerer",
+        "Dragon",
+        "Fire",
+        "Hero",
+        "Hunter",
+        "Solo",
+        "Titan",
+        "Chainsaw",
+        "Flight",
+        "Ego",
+        "Clover",
+        "Ghoul",
+        "Geass",
+        "Bizarre"
+    },
+    Multi = true,
+    AllowNone = true,
+    SearchBarEnabled = true,
+    Callback = function(v)
+        SelectedUpgradeCards = v
+    end
+})
+
+GradeTab:Dropdown({
+    Title = "From Rarity",
+    Desc = "Auto upgrade to next rarity",
+    Values = {
+        "Regular",
+        "Gold",
+        "Emerald",
+        "Void",
+        "Diamond"
+    },
+    Value = "Regular",
+    Callback = function(v)
+        FromRarity = v
+    end
+})
+
+
+GradeTab:Toggle({
+    Title = "Auto Upgrade",
+    Desc = "Auto exchange to next rarity",
+    Value = false,
+    Callback = function(v)
+        AutoUpgrade = v
+        if not v then return end
+
+        task.spawn(function()
+            while AutoUpgrade do
+                local ToRarity = GetNextRarity(FromRarity)
+                if not ToRarity then
+                    task.wait(0.5)
+                    continue
+                end
+
+                for _, cardName in ipairs(SelectedUpgradeCards) do
+                    if not AutoUpgrade then break end
+
+                    pcall(function()
+                        CardRemote:FireServer(
+                            "Exchange",
+                            cardName,
+                            FromRarity,
+                            ToRarity
+                        )
+                    end)
+
+                    task.wait(0.01)
+                end
+
+                task.wait(0.01)
+            end
+        end)
+    end
+})
+
+GradeTab:Space()
+--------------------------------------------------
+--// DROPDOWN AND TOGGLE DOWNGRADE
+--------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CardRemote = ReplicatedStorage
+    :WaitForChild("Remotes")
+    :WaitForChild("Card")
+
+local AutoDowngrade = false
+local SelectedDowngradeCards = {}
+local FromRarity = "Gold"
+
+GradeTab:Dropdown({
+    Title = "Downgrade Cards",
+    Desc = "Select cards to downgrade",
+    Values = {
+        "Pirate",
+        "Ninja",
+        "Soul",
+        "Slayer",
+        "Sorcerer",
+        "Dragon",
+        "Fire",
+        "Hero",
+        "Hunter",
+        "Solo",
+        "Titan",
+        "Chainsaw",
+        "Flight",
+        "Ego",
+        "Clover",
+        "Ghoul",
+        "Geass",
+        "Bizarre"
+    },
+    Multi = true,
+    AllowNone = true,
+    SearchBarEnabled = true,
+    Callback = function(v)
+        SelectedDowngradeCards = v
+    end
+})
+
+GradeTab:Dropdown({
+    Title = "Downgrade From",
+    Desc = "Rainbow → Diamond → Void → Emerald → Gold → Regular",
+    Values = {
+        "Rainbow",
+        "Diamond",
+        "Void",
+        "Emerald",
+        "Gold"
+    },
+    Value = "Gold",
+    Callback = function(v)
+        FromRarity = v
+    end
+})
+
+GradeTab:Toggle({
+    Title = "Auto Downgrade",
+    Desc = "Auto downgrade selected cards",
+    Value = false,
+    Callback = function(v)
+        AutoDowngrade = v
+        if not v then return end
+
+        task.spawn(function()
+            while AutoDowngrade do
+                for _, cardName in ipairs(SelectedDowngradeCards) do
+                    if not AutoDowngrade then break end
+
+                    pcall(function()
+                        CardRemote:FireServer(
+                            "Downgrade",
+                            cardName,
+                            FromRarity
+                        )
+                    end)
+
+                    task.wait(0.01)
+                end
+
+                task.wait(0.01)
+            end
+        end)
+    end
+})
 
 
 

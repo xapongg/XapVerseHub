@@ -11,6 +11,7 @@ local PlaceList = {
     [82013336390273] = "https://raw.githubusercontent.com/xapongg/XapVerseHub/refs/heads/main/Games/PickaxeSim.lua",
     [76285745979410] = "https://raw.githubusercontent.com/xapongg/XapVerseHub/refs/heads/main/Games/AnimeCardCollection.lua",
     [121757491357999] = "https://raw.githubusercontent.com/xapongg/XapVerseHub/refs/heads/main/Games/FeedAndFarm.lua",
+    [83369512629707] = "https://raw.githubusercontent.com/xapongg/XapVerseHub/refs/heads/main/Games/SawahIndo.lua",
 }
 
 local scriptURL =
